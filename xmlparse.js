@@ -87,19 +87,3 @@ if (errorNode) {
  };
 
 
-const traverseObject = (rootObj, nodeCB) => {
-  let stack = [["root", rootObj]];
-  while(stack.length){
-    let [childKey, childValue] = stack.pop();
-    Object.entries(childValue).forEach((v) => {
-      stack.push(v);
-    });
-    nodeCB(childKey, childValue);
-  }
-};
-
-
-traverseObject(tree, ([key, value]) => {
-  let strValue = typeof value === "object" ? "obj" : value;
-  console.log(`key: ${key} value: ${strValue}`);
-});
