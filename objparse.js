@@ -1,9 +1,10 @@
+// all these are variations that do the same
 let getType = (o) => Object.prototype.toString.call(o).replace(/\object /,"");
 let getType_1 = (o) => Object.prototype.toString.call(o).replace(/.+\s(\w+)./,"$1");
 let getType_2 = (o) => Object.prototype.toString.call(o).replace(/\[\w+ (.+)\]/,"$1");
 let getType_3 = (o) => Object.prototype.toString.call(o).slice(8,-1);
+import {kind} from "./helper.js"; // did not test this one thoroughly
 
-import {kind} from "./helper.js";
 
 let tree = {
   apple: {
@@ -16,7 +17,7 @@ let tree = {
               },
               x: 0, 
               y: null,
-              w: 400
+              w: [400, 500]
           },
           i113: "Ente",
       },
@@ -24,7 +25,7 @@ let tree = {
           i121: "i121 data"
       }
   },
-  pear: "i2 data",
+  pear: false,
   banana: "i3 data"
 };
 
@@ -63,7 +64,7 @@ if(0) {
 /**
  * @param {object} obj
  */
- const hasChildrenTest = (obj) => obj && typeof obj == "object" && Object.keys(obj).length;
+ const hasChildrenTest = (obj) => obj && getType_3(obj) === "Object" && Object.keys(obj).length;
  
  /**
  * @param {object} rootObj
@@ -97,31 +98,45 @@ const traverseObject_2 = (rootObj, nodeCB) => {
 // this is my attempt to construct a JSON output, it's NOT working correctly
 let brax = [];
 traverseObject_2(tree, (node) => {
-    let offset = Array(node.depth).fill("  ");
+    const indent = "    ";
+    let offset = Array(node.depth).fill(indent).join("");
     let strValue;
 
     if(node.hasChildren) {
         strValue = "{";
-        brax.push("\n" + offset.join("") + "}" + (node.isLastChild ? "": ","));
+        brax.push("\n" + offset + "}" + (node.isLastChild ? "": ","));
     }
     else {
-        strValue = typeof node.value === "string" ? `"${node.value}"` : node.value;
-        if (node.value instanceof Array && !node.value.length) strValue += "[]";
-        if (!node.isLastChild) strValue += ",";
-    }
-    
-    if(node.hasChildren) {
-    }
-    else {
+        let type = getType_3(node.value);
+        if (type === "Array") {
+            if (node.value.length) {
+                let offset1 = offset + indent;
+                strValue = `[\n${offset1}${node.value.join(",\n" + offset1)}\n${offset}]`;
+            }
+            else {
+                strValue = "[]";
+            }
+        }
+        else if (type === "String") {
+            strValue = `"${node.value}"`;
+        }
+        else {
+            strValue = node.value;
+        }
+
         if(node.isLastChild) {
             strValue += brax.pop();
         }
+        else {
+            strValue += ",";
+        }
     }
-
-    console.log(`${offset.join('')}"${node.key}": ${strValue}`);
+    
+    console.log(`${offset}"${node.key}": ${strValue}`);
 });
 
-// This is the most simple traversal function, obviously not very tree-like
+// This is the most simple traversal function
+// It's output is obviously not very tree-like
 traverseObject_2(tree, (node) => { console.log(node); });
 
 // This is how JSON looks like. Uncomment the line below to see it!
