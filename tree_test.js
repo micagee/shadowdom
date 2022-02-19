@@ -9,6 +9,7 @@ let nodes = Array(20).fill({}).map((v, i, a) => ({
     info: ""
 }));
 
+// this generates a tree, no cycles possible!
 let nodes2 = [];
 for(let i = 0; i < NUM_NODES; ++i) {
     nodes2.push({
