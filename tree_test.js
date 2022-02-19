@@ -1,7 +1,7 @@
 const NUM_NODES = 20;
 
 // generate a graph where each node has exactly one outgoing edge
-let nodes = Array(20).fill({}).map((v, i, a) => ({
+let nodes = Array(NUM_NODES).fill({}).map((v, i, a) => ({
     name: i, 
     parentName: ~~(Math.random() * a.length),
     children: [],
