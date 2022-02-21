@@ -1,26 +1,9 @@
-const NUM_NODES = 20;
+import fs from 'fs';
 
-// generate a graph where each node has exactly one outgoing edge
-let nodes = Array(NUM_NODES).fill({}).map((v, i, a) => ({
-    name: i, 
-    parentName: ~~(Math.random() * a.length),
-    children: [],
-    depth: 0,
-    info: ""
-}));
+const NUM_NODES = 30;
+const INDENT = "  ";
 
-// this generates a tree, no cycles possible!
-let nodes2 = [];
-for(let i = 0; i < NUM_NODES; ++i) {
-    nodes2.push({
-        name: i, 
-        parentName: ~~(Math.random() * i),
-        children: [],
-        depth: 0,
-        info: ""
-    })
-}
-
+// print helper
 const printArray = (a) => `[${a.map((v) => v.name).join(', ')}]`
 const printNum = (n) => n < 10 ? ` ${n}` : n;
 
@@ -34,6 +17,30 @@ const printNodes = (nodes) =>
         console.log(out);
     });
 
+
+// list of edges
+let nodes = [];
+
+// this generates a tree, no cycles possible!
+if(0) { // change to 1 if new data is needed
+    for(let i = 0; i < NUM_NODES; ++i) {
+        nodes.push({
+            name: i, 
+            parentName: ~~(Math.random() * i),
+            children: [],
+            depth: 0,
+            info: ""
+        })
+    }
+
+    let json = JSON.stringify(nodes, null, 2);
+    fs.writeFileSync("./assets/edgelist.json", json, {encoding: 'utf-8'});
+}
+else {
+    let json = fs.readFileSync("./assets/edgelist.json", "utf8");
+    nodes = JSON.parse(json);
+}
+
 const traverse = (tree, cb) => {
     let stack = [tree];
 
@@ -46,48 +53,23 @@ const traverse = (tree, cb) => {
     }
 };
     
-let nodes_filtered = nodes2.map((node, i ,a) => {
+let nodes_filtered = nodes.map((node, i ,a) => {
+    if (i === 0) return node; // this is root
     let parentNode = a.find((n) => n.name === node.parentName);
 
-    // break cycle, does not work
-    if(node.children.some((child) => child.name === node.parentName)) {
-        node.parentName = node.name;
-        return node;
-    }
-    
-    if (node.name !== node.parentName) {
+    // 
+    // if (node.name !== node.parentName) {
         parentNode.children.push(node);
-        
-        // beware of cycles
         traverse(node, (child) => { child.depth = parentNode.depth + 1; });
-    }
+    // }
 
     return node;
-}).filter((node, i, a) => {
-    if(i==a.length-1) { printNodes(a); console.log("") }
-    return true;
-}).filter((node, i, a) => {
-    return node.children.length;
-    // return true;
-}).filter((node, i, a) => {
-    if(node.name == node.parentName){
-        node.info = "  <-";
-    }
-    
-    return node.name == node.parentName;
-    // return true;
 });
+
 printNodes(nodes_filtered);
-console.log("");
 
-let Tree = {
-    name: "root",
-    parentName: "",
-    children: nodes_filtered,
-    depth: -1
-};
-
-traverse(Tree, (node) => {
-    let indent = Array(node.depth+1).fill("  ").join("");
+// root is always the first entry when using nodes generator
+traverse(nodes_filtered[0], (node) => {
+    let indent = INDENT.repeat(node.depth);
     console.log(`${indent}${node.name}`);
 });
