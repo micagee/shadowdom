@@ -25,7 +25,7 @@ const printNodes = (nodes) =>
 let nodes = [];
 
 // this generates a tree, no cycles possible!
-if(0) { // change to 1 if new data is needed
+if(1) { // change to 1 if new data is needed
     for(let i = 0; i < NUM_NODES; ++i) {
         nodes.push({
             name: i, 
@@ -58,13 +58,11 @@ const traverse = (tree, cb) => {
     
 let nodes_filtered = nodes.map((node, i ,a) => {
     if (i === 0) return node; // this is root
-    let parentNode = a.find((n) => n.name === node.parentName);
 
-    // 
-    // if (node.name !== node.parentName) {
-        parentNode.children.push(node);
-        traverse(node, (child) => { child.depth = parentNode.depth + 1; });
-    // }
+    let parentNode = a.find((n) => n.name === node.parentName);
+    parentNode.children.push(node);
+    // traverse(node, (child) => { child.depth = parentNode.depth + 1; });
+    node.depth = parentNode.depth + 1;
 
     return node;
 });
