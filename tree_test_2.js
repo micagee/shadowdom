@@ -56,20 +56,12 @@ const traverse = (tree, cb) => {
         let node = stack.pop();
         stack = stack.concat(node.children.reverse());
         cb({node, index, accu});
+        index += 1;
     }
+
+    return accu;
 };
     
-let nodes_augm = nodes.map((node, i ,a) => {
-    if (i === 0) return node; // this is root
-
-    let parentNode = a.find((n) => n.name === node.parentName);
-    parentNode.children.push(node);
-    // traverse(node, (child) => { child.depth = parentNode.depth + 1; });
-    node.depth = parentNode.depth + 1;
-
-    return node;
-});
-
 /** split array into two parts depending on condition
  * @param {[]} arr
  * @param {(entry:any) => boolean} cond
@@ -81,80 +73,50 @@ function splitArray(arr, cond) {
     });
     return { lft, rgt };
 }
+
+/** The new method has the advantage that the array to search 
+ *  for the children is getting smaller with each search
+ *  the old way had to search the complete node list for each node
+ */
 let nodes_augm_2 = ((nodes) => {
     let arr = nodes;
+
     for(let node of nodes) {
+        
         let {lft, rgt} = splitArray(arr, (n) => n.parentName === node.name);
-        node.children = rgt;
+        
+        node.children = rgt.map((ch)=> {
+            
+            ch.depth = node.depth + 1;
+            ch.parent = node;
+
+            return ch;
+        });
+        
         arr = lft;
     }
-    
-    // remove root from its children
-    nodes[0].children.shift();
 
     return nodes;
 })(nodes);
 
-// printNodes(nodes_augm);
-
-// root is always the first entry when using nodes generator
-// traverse(nodes_augm[0], (node) => {
-//     let indent = INDENT.repeat(node.depth);
-//     console.log(`${indent}${node.name}`);
-// });
-
-
-// ================================================
-if(0) {
-    nodes_augm.map((node,i,a) => {
-        node.lft = 0;
-        node.rgt = 42;
-        return node;
-    }).forEach((node, i) => {
-        let out = "";
-        out += `[${printNum(node.name)} : `;
-        out += `${printNum(node.parentName)} : `;
-        out += `(${printNum(node.lft)}, ${printNum(node.rgt)})]`;
-        console.log(out);
-    });
-    traverse(nodes_augm[0], (node) => {
-        // name, parentName, lft, rgt 
-    })
-}
-
-
-const traverseDFS = (tree, cb) => {
-    let index = 0;
-    let accu = [];
-    const preorder = (node, cb) => {
-        node.start = index;
-        cb({ node, index, accu });
-        index += 1;
-        accu.push(node);
-        node.children.forEach((child) => preorder(child, cb));
-        node.next = index;
-        accu.pop()
-    };
-    preorder(tree, ()=>0); index = 0;
-    preorder(tree, cb);
-};
-
-
-let nodes_preorder = [];
-traverseDFS(nodes_augm[0], ({node, index, accu}) => {
-    let out = "";
-    // out += `${printNum(index)}.  `;
-    out += `${INDENT.repeat(node.depth)}  `;
-    out += `[${printNum(node.name)} : `;
-    out += `${printNum(node.parentName)}]`;
-    out += `  ${accu.map((v)=>v.name).join("/")}`;
-    out += `  (${printNum(node.start)}, ${printNum(node.next)})`;
-    console.log(out);
-    nodes_preorder.push({ node, index });
-});
-
 traverse(nodes_augm_2[0], ({node, index, accu}) => {
+    accu.push(node);
+    node.start = index;
+}).forEach((node, i, a) => {
+    if(node.parent) {
+        let selfIndex = node.parent.children.indexOf(node);
+        if (selfIndex !== node.parent.children.length - 1) {
+            node.next = node.parent.children[selfIndex+1].start;
+        }
+        else {
+            node.next = "???"
+        }
+    }
+
+
     let out = `${INDENT.repeat(node.depth)}`;
     out += `${printNum(node.name)}`;
+    out += `  (${printNum(node.start)}`;
+    out += `, ${printNum(node.next)})`;
     console.log(out);
 });
